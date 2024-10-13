@@ -1,94 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MN End to End Workflow</title>
-<link rel="stylesheet" th:href="@{/css/style.css}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MN End to End Workflow</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-	<div class="container">
-		<header>
-			<h1>MN End to End Workflow</h1>
-			<div class="user-info">
-				<span>Raja Murugan</span> <span>Role (Analyst)</span>
-			</div>
-		</header>
-		<div class="content">
-			<div class="left-panel">
-				<button id="changeFileBtn" onclick="showPanel('changeFile')">Change
-					File Generator</button>
-				<button id="peerReviewBtn" onclick="showPanel('peerReview')">Peer
-					Review Validator</button>
-				<button id="impactReportBtn" onclick="showPanel('impactReport')">Impact
-					Report Generator</button>
-			</div>
-			<div class="right-panel">
-				<div id="changeFile" class="panel hidden">
-					<h3>Change File Generator</h3>
-				</div>
+    <div class="container">
+        <header>
+            <h1>MN End to End Workflow</h1>
+            <div class="user-info">
+                <span>Raja Murugan</span> <span>Role (Analyst)</span>
+            </div>
+        </header>
+        <div class="content">
+            <div class="left-panel">
+                <button id="changeFileBtn" onclick="showPanel('changeFile')">Change File Generator</button>
+                <button id="peerReviewBtn" onclick="showPanel('peerReview')">Peer Review Validator</button>
+                <button id="impactReportBtn" onclick="showPanel('impactReport')">Impact Report Generator</button>
+            </div>
+            <div class="right-panel">
+                <div id="changeFile" class="panel hidden">
+                    <h3>Change File Generator</h3>
+                    <!-- Additional content for Change File Generator can be added here -->
+                </div>
 
-				<div id="peerReview" class="panel hidden">
-					<h3>Select Env</h3>
-					<select>
-						<option value="sit">SIT</option>
-						<option value="dev">DEV</option>
-					</select>
+                <div id="peerReview" class="panel hidden">
+                    <h3>Select Env</h3>
+                    <select>
+                        <option value="sit">SIT</option>
+                        <option value="dev">DEV</option>
+                    </select>
 
-					<h3>Select Change File</h3>
-					<input type="file" id="changeFileInput" title="Browse for file" accept=".xls,.xlsx">
+                    <h3>Select Change File</h3>
+                    <input type="file" id="peerReviewFile" accept=".xls,.xlsx">
 
-					<button class="validate-btn" onclick="validatePeerReview()">Validate</button>
-				</div>
+                    <button class="validate-btn" onclick="validatePeerReview()">Validate</button>
+                </div>
 
-				<div id="impactReport" class="panel hidden">
-					<h3>Impact Report Generator</h3>
-				</div>
-			</div>
-		</div>
-	</div>
+                <div id="impactReport" class="panel hidden">
+                    <h3>Impact Report Generator</h3>
+                    <!-- Additional content for Impact Report Generator can be added here -->
+                </div>
+            </div>
+        </div>
+    </div>
 
-	<script>
-    function showPanel(panelId) {
-        // Hide all panels
-        document.querySelectorAll('.panel').forEach(panel => {
-            panel.classList.add('hidden');
-        });
+    <script>
+        function showPanel(panelId) {
+            console.log("Panel clicked: " + panelId);
+            
+            // Hide all panels
+            document.querySelectorAll('.panel').forEach(panel => {
+                panel.classList.add('hidden');
+                console.log(panel.id + " is now hidden");
+            });
 
-        // Show the selected panel
-        const panelToShow = document.getElementById(panelId);
-        if (panelToShow) {
-            panelToShow.classList.remove('hidden');
-        }
-    }
+            // Show the selected panel
+            const panelToShow = document.getElementById(panelId);
+            if (panelToShow) {
+                console.log("Showing panel: " + panelId);
+                panelToShow.classList.remove('hidden');
 
-    function validatePeerReview() {
-        let fileInput = document.getElementById('changeFileInput');
-        let selectedFile = fileInput.files[0];
-
-        if (!selectedFile) {
-            alert("Please select a file before validating.");
-            return;
-        }
-
-        let formData = new FormData();
-        formData.append("file", selectedFile);
-
-        fetch('/peer-review/validate', {
-            method: 'POST',
-            body: formData
-        }).then(response => {
-            if (!response.ok) {
-                throw new Error('Validation failed');
+                // Log computed style to check visibility
+                const style = window.getComputedStyle(panelToShow);
+                console.log("Computed style:", style.display);
+            } else {
+                console.error("No panel found with ID: " + panelId);
             }
-            return response.json();
-        }).then(data => {
-            alert("File validation complete: " + JSON.stringify(data));
-        }).catch(error => {
-            console.error("Error during validation:", error);
-            alert("Validation failed. Please try again.");
-        });
-    }
-	</script>
+        }
+
+        function validatePeerReview() {
+            const fileInput = document.getElementById("peerReviewFile");
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Please select a file to validate.");
+                return;
+            }
+
+            // Log the file name and type
+            console.log("Selected file: " + file.name);
+            console.log("File type: " + file.type);
+            console.log("File size: " + file.size + " bytes");
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            console.log("FormData object created. Sending file via AJAX...");
+
+            // Send file using AJAX
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "/peer-review/validate", true);
+
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    console.log("Response: " + xhr.responseText);
+                    alert("Validation successful: " + xhr.responseText);
+                } else {
+                    console.error("Error: " + xhr.responseText);
+                    alert("Validation failed: " + xhr.responseText);
+                }
+            };
+
+            // Handle any error
+            xhr.onerror = function () {
+                console.error("An error occurred during the file upload.");
+                alert("An error occurred during the validation process.");
+            };
+
+            // Send the file data
+            xhr.send(formData);
+        }
+    </script>
 </body>
 </html>
