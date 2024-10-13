@@ -26,74 +26,69 @@
 			<div class="right-panel">
 				<div id="changeFile" class="panel hidden">
 					<h3>Change File Generator</h3>
-					<!-- Additional content for Change File Generator can be added here -->
 				</div>
 
-				<!-- Peer Review Validator Panel -->
 				<div id="peerReview" class="panel hidden">
-					<h3>Select Environment</h3>
-					<select id="envSelect">
-						<option value="SIT">SIT</option>
-						<option value="DEV">DEV</option>
-						<!-- Add more environments if needed -->
+					<h3>Select Env</h3>
+					<select>
+						<option value="sit">SIT</option>
+						<option value="dev">DEV</option>
 					</select>
 
 					<h3>Select Change File</h3>
-					<input type="file" id="fileInput" title="Browse for file" accept=".xls,.xlsx">
+					<input type="file" id="changeFileInput" title="Browse for file" accept=".xls,.xlsx">
 
 					<button class="validate-btn" onclick="validatePeerReview()">Validate</button>
-
-					<div id="resultMessage"></div>
 				</div>
 
 				<div id="impactReport" class="panel hidden">
 					<h3>Impact Report Generator</h3>
-					<!-- Additional content for Impact Report Generator can be added here -->
 				</div>
 			</div>
 		</div>
 	</div>
 
 	<script>
-        function showPanel(panelId) {
-            // Hide all panels
-            document.querySelectorAll('.panel').forEach(panel => {
-                panel.classList.add('hidden');
-            });
+    function showPanel(panelId) {
+        // Hide all panels
+        document.querySelectorAll('.panel').forEach(panel => {
+            panel.classList.add('hidden');
+        });
 
-            // Show the selected panel
-            document.getElementById(panelId).classList.remove('hidden');
+        // Show the selected panel
+        const panelToShow = document.getElementById(panelId);
+        if (panelToShow) {
+            panelToShow.classList.remove('hidden');
+        }
+    }
+
+    function validatePeerReview() {
+        let fileInput = document.getElementById('changeFileInput');
+        let selectedFile = fileInput.files[0];
+
+        if (!selectedFile) {
+            alert("Please select a file before validating.");
+            return;
         }
 
-        function validatePeerReview() {
-            const fileInput = document.getElementById('fileInput');
-            const envSelect = document.getElementById('envSelect');
-            const resultMessage = document.getElementById('resultMessage');
+        let formData = new FormData();
+        formData.append("file", selectedFile);
 
-            if (fileInput.files.length === 0) {
-                alert('Please select a file to validate.');
-                return;
+        fetch('/peer-review/validate', {
+            method: 'POST',
+            body: formData
+        }).then(response => {
+            if (!response.ok) {
+                throw new Error('Validation failed');
             }
-
-            const file = fileInput.files[0];
-            const formData = new FormData();
-            formData.append('file', file);  // Append the file to the FormData
-            formData.append('environment', envSelect.value);  // Append the environment
-
-            // Send the file and environment to the back-end via AJAX
-            fetch('/peer-review/validate', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.text())  // Parse the response as text
-            .then(data => {
-                resultMessage.innerHTML = `<p>${data}</p>`;  // Display the result message
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                resultMessage.innerHTML = '<p style="color: red;">Validation failed. Please try again.</p>';
-            });
-        }
-    </script>
+            return response.json();
+        }).then(data => {
+            alert("File validation complete: " + JSON.stringify(data));
+        }).catch(error => {
+            console.error("Error during validation:", error);
+            alert("Validation failed. Please try again.");
+        });
+    }
+	</script>
 </body>
 </html>
