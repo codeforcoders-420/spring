@@ -14,15 +14,19 @@
                 <span>Raja Murugan</span> <span>Role (Analyst)</span>
             </div>
         </header>
-
-        <div class="content top-aligned">
+        <div class="content">
             <div class="left-panel">
                 <button id="changeFileBtn" onclick="showPanel('changeFile')">Change File Generator</button>
                 <button id="peerReviewBtn" onclick="showPanel('peerReview')">Peer Review Validator</button>
                 <button id="impactReportBtn" onclick="showPanel('impactReport')">Impact Report Generator</button>
+                <div role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="--value: 0; margin-top: 20px;"></div>
             </div>
-
             <div class="right-panel">
+                <div id="changeFile" class="panel hidden">
+                    <h3>Change File Generator</h3>
+                    <!-- Additional content for Change File Generator can be added here -->
+                </div>
+
                 <div id="peerReview" class="panel hidden">
                     <h3>Select Env</h3>
                     <select>
@@ -34,92 +38,75 @@
                     <input type="file" title="Browse for file" accept=".xls,.xlsx">
 
                     <button class="validate-btn" onclick="validatePeerReview()">Validate</button>
+                </div>
 
-                    <!-- Progress Circle -->
-                    <div class="progress-circle-container">
-                        <div id="progressCircle" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="--value: 0"></div>
-                    </div>
+                <div id="impactReport" class="panel hidden">
+                    <h3>Impact Report Generator</h3>
+                    <!-- Additional content for Impact Report Generator can be added here -->
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        function validatePeerReview() {
-            const fileInput = document.querySelector('input[type="file"]');
-            const file = fileInput.files[0];
+        function showPanel(panelId) {
+            console.log("Panel clicked: " + panelId);
+            
+            // Hide all panels
+            document.querySelectorAll('.panel').forEach(panel => {
+                panel.classList.add('hidden');
+                console.log(panel.id + " is now hidden");
+            });
 
-            if (file) {
-                console.log("Selected file: " + file.name);
+            // Show the selected panel
+            const panelToShow = document.getElementById(panelId);
+            if (panelToShow) {
+                console.log("Showing panel: " + panelId);
+                panelToShow.classList.remove('hidden');
 
-                const xhr = new XMLHttpRequest();
-                xhr.open("POST", "/peer-review/validate", true);
-
-                xhr.upload.onprogress = function (event) {
-                    if (event.lengthComputable) {
-                        const percentage = (event.loaded / event.total) * 100;
-                        updateProgressCircle(percentage);
-                    }
-                };
-
-                xhr.onload = function () {
-                    if (xhr.status === 200) {
-                        alert("Validation successful: " + xhr.responseText);
-                    } else {
-                        alert("Validation failed: " + xhr.responseText);
-                    }
-                };
-
-                const formData = new FormData();
-                formData.append("file", file);
-                xhr.send(formData);
+                // Log computed style to check visibility
+                const style = window.getComputedStyle(panelToShow);
+                console.log("Computed style:", style.display);
             } else {
-                alert("Please select a file!");
+                console.error("No panel found with ID: " + panelId);
             }
         }
 
-        function updateProgressCircle(percentage) {
-            const progressCircle = document.getElementById("progressCircle");
-            progressCircle.style.setProperty('--value', percentage);
+        function validatePeerReview() {
+            alert("Validation in progress...");
+
+            const fileInput = document.querySelector('input[type="file"]');
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "/peer-review/validate", true);
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    console.log("Response: " + xhr.responseText);
+                    alert("Validation successful: " + xhr.responseText);
+                } else {
+                    console.error("Error: " + xhr.responseText);
+                    alert("Validation failed: " + xhr.responseText);
+                }
+            };
+            xhr.send(formData);
         }
 
-        function showPanel(panelId) {
-            document.querySelectorAll('.panel').forEach(panel => panel.classList.add('hidden'));
-            document.getElementById(panelId).classList.remove('hidden');
-        }
-        
-        
-    </script>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
-<script>
-    let stompClient = null;
+        // WebSocket connection for progress updates
+        const socket = new SockJS('/progress');
+        const stompClient = Stomp.over(socket);
 
-    function connect() {
-        const socket = new SockJS('/ws');
-        stompClient = Stomp.over(socket);
         stompClient.connect({}, function (frame) {
             console.log('Connected: ' + frame);
-            stompClient.subscribe('/topic/progress', function (progress) {
-                updateProgressCircle(JSON.parse(progress.body));
+            stompClient.subscribe('/topic/progress', function (message) {
+                const progress = message.body; // Get the progress percentage from the message
+                console.log('Progress: ' + progress + '%');
+                // Update your progress circle here
+                document.querySelector('[role="progressbar"]').style.setProperty('--value', progress);
             });
         });
-    }
-
-    function validatePeerReview() {
-        // ... (existing validatePeerReview code)
-    }
-
-    function updateProgressCircle(percentage) {
-        const progressCircle = document.getElementById("progressCircle");
-        progressCircle.style.setProperty('--value', percentage);
-    }
-
-    window.onload = function() {
-        connect(); // Connect to WebSocket when page loads
-    };
-</script>
-
+    </script>
 </body>
 </html>
