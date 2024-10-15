@@ -5,20 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MN End to End Workflow</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    <style>
-        .progress-circle {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: conic-gradient(#4a90e2 0%, #4a90e2 var(--progress), #d9e2ef var(--progress), #d9e2ef 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 24px;
-            font-weight: bold;
-            color: #4a90e2;
-        }
-    </style>
 </head>
 <body>
     <div class="container">
@@ -50,9 +36,7 @@
                     <button class="validate-btn" onclick="validatePeerReview()">Validate</button>
 
                     <!-- Progress Circle -->
-                    <div class="progress-circle" id="progressCircle" style="--progress: 0%;">
-                        0%
-                    </div>
+                    <div id="progressBar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="--value: 0"></div>
 
                     <!-- Log Messages -->
                     <div id="logMessages" style="margin-top: 20px;"></div>
@@ -78,18 +62,17 @@
                 return;
             }
 
-            // Update progress in intervals (mocked as an example)
-            const progressCircle = document.getElementById('progressCircle');
-            let progress = 0;
+            const progressBar = document.getElementById('progressBar');
 
+            // Update progress in intervals (mocked as an example)
+            let progress = 0;
             const interval = setInterval(() => {
                 progress += 10;
                 if (progress > 100) {
                     clearInterval(interval);
                     progress = 100;
                 }
-                progressCircle.style.setProperty('--progress', `${progress}%`);
-                progressCircle.textContent = `${progress}%`;
+                progressBar.style.setProperty('--value', `${progress}`);
             }, 500);
 
             // Create form data for the file
