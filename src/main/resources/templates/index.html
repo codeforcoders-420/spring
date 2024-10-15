@@ -14,8 +14,8 @@
                 <span>Raja Murugan</span> <span>Role (Analyst)</span>
             </div>
         </header>
-        
-        <div class="content">
+
+        <div class="content top-aligned">
             <div class="left-panel">
                 <button id="changeFileBtn" onclick="showPanel('changeFile')">Change File Generator</button>
                 <button id="peerReviewBtn" onclick="showPanel('peerReview')">Peer Review Validator</button>
@@ -31,77 +31,95 @@
                     </select>
 
                     <h3>Select Change File</h3>
-                    <input type="file" id="fileInput" title="Browse for file" accept=".xls,.xlsx">
+                    <input type="file" title="Browse for file" accept=".xls,.xlsx">
 
                     <button class="validate-btn" onclick="validatePeerReview()">Validate</button>
 
                     <!-- Progress Circle -->
-                    <div id="progressBar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="--value: 0"></div>
-
-                    <!-- Log Messages -->
-                    <div id="logMessages" style="margin-top: 20px;"></div>
+                    <div class="progress-circle-container">
+                        <div id="progressCircle" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="--value: 0"></div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        function showPanel(panelId) {
-            document.querySelectorAll('.panel').forEach(panel => {
-                panel.classList.add('hidden');
-            });
-            document.getElementById(panelId).classList.remove('hidden');
-        }
-
         function validatePeerReview() {
-            const fileInput = document.getElementById('fileInput');
+            const fileInput = document.querySelector('input[type="file"]');
             const file = fileInput.files[0];
 
-            if (!file) {
-                alert("Please select a file first.");
-                return;
+            if (file) {
+                console.log("Selected file: " + file.name);
+
+                const xhr = new XMLHttpRequest();
+                xhr.open("POST", "/peer-review/validate", true);
+
+                xhr.upload.onprogress = function (event) {
+                    if (event.lengthComputable) {
+                        const percentage = (event.loaded / event.total) * 100;
+                        updateProgressCircle(percentage);
+                    }
+                };
+
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        alert("Validation successful: " + xhr.responseText);
+                    } else {
+                        alert("Validation failed: " + xhr.responseText);
+                    }
+                };
+
+                const formData = new FormData();
+                formData.append("file", file);
+                xhr.send(formData);
+            } else {
+                alert("Please select a file!");
             }
-
-            const progressBar = document.getElementById('progressBar');
-
-            // Update progress in intervals (mocked as an example)
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += 10;
-                if (progress > 100) {
-                    clearInterval(interval);
-                    progress = 100;
-                }
-                progressBar.style.setProperty('--value', `${progress}`);
-            }, 500);
-
-            // Create form data for the file
-            const formData = new FormData();
-            formData.append('file', file);
-
-            // AJAX request to the backend
-            const xhr = new XMLHttpRequest();
-            xhr.open("POST", "/peer-review/validate", true);
-
-            xhr.onload = function () {
-                if (xhr.status === 200) {
-                    console.log("Response: " + xhr.responseText);
-                    appendLog("Validation successful: " + xhr.responseText);
-                } else {
-                    console.error("Error: " + xhr.responseText);
-                    appendLog("Validation failed: " + xhr.responseText);
-                }
-            };
-
-            xhr.send(formData);
         }
 
-        function appendLog(message) {
-            const logMessages = document.getElementById("logMessages");
-            const logEntry = document.createElement("p");
-            logEntry.textContent = message;
-            logMessages.appendChild(logEntry);
+        function updateProgressCircle(percentage) {
+            const progressCircle = document.getElementById("progressCircle");
+            progressCircle.style.setProperty('--value', percentage);
         }
+
+        function showPanel(panelId) {
+            document.querySelectorAll('.panel').forEach(panel => panel.classList.add('hidden'));
+            document.getElementById(panelId).classList.remove('hidden');
+        }
+        
+        
     </script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<script>
+    let stompClient = null;
+
+    function connect() {
+        const socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, function (frame) {
+            console.log('Connected: ' + frame);
+            stompClient.subscribe('/topic/progress', function (progress) {
+                updateProgressCircle(JSON.parse(progress.body));
+            });
+        });
+    }
+
+    function validatePeerReview() {
+        // ... (existing validatePeerReview code)
+    }
+
+    function updateProgressCircle(percentage) {
+        const progressCircle = document.getElementById("progressCircle");
+        progressCircle.style.setProperty('--value', percentage);
+    }
+
+    window.onload = function() {
+        connect(); // Connect to WebSocket when page loads
+    };
+</script>
+
 </body>
 </html>

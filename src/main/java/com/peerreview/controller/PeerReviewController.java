@@ -1,42 +1,56 @@
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 @RestController
 @RequestMapping("/peer-review")
 public class PeerReviewController {
 
+    private final ProgressController progressController;
+
+    @Autowired
+    public PeerReviewController(ProgressController progressController) {
+        this.progressController = progressController;
+    }
+
     @PostMapping("/validate")
     public ResponseEntity<String> validateFile(@RequestParam("file") MultipartFile file) {
-        // Logs to store system output
-        StringBuilder logs = new StringBuilder();
-
-        // Check if a file is selected
         if (file.isEmpty()) {
-            logs.append("No file selected for validation.");
-            return new ResponseEntity<>(logs.toString(), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("No file selected for validation.", HttpStatus.BAD_REQUEST);
         }
 
         try {
-            // Save the file to a temporary directory
             File tempFile = new File(System.getProperty("java.io.tmpdir") + "/" + file.getOriginalFilename());
             try (FileOutputStream fos = new FileOutputStream(tempFile)) {
                 fos.write(file.getBytes());
             }
 
-            // Log file save message
-            logs.append("File saved successfully at: ").append(tempFile.getAbsolutePath()).append("\n");
+            // Simulate line processing and send updates
+            int totalLines = 300;  // Assume you know the total lines
+            for (int currentLine = 1; currentLine <= totalLines; currentLine++) {
+                double progressPercentage = (double) currentLine / totalLines * 100;
+                updateProgress(progressPercentage);  // Send progress updates
+                Thread.sleep(100); // Simulate processing time (remove in production)
+            }
 
-            // Call the Excel processing method (your existing Java code)
-            String filePath = tempFile.getAbsolutePath();
-            logs.append("File path for validation: ").append(filePath).append("\n");
-
-            // Example: Assuming your logic from the provided code
-            ReadDataFromExcel.UploadFileAndValidate(filePath);  // Modify this call as per your logic
-
-            // Return a success response
-            logs.append("File validation completed successfully.");
-            return new ResponseEntity<>(logs.toString(), HttpStatus.OK);
-        } catch (IOException e) {
+            return new ResponseEntity<>("File validation completed successfully.", HttpStatus.OK);
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
-            logs.append("File upload/validation failed: ").append(e.getMessage());
-            return new ResponseEntity<>(logs.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("File upload/validation failed: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private void updateProgress(double percentage) {
+        System.out.println("Progress: " + percentage + "%");
+        progressController.sendProgressUpdate(percentage); // Send progress via WebSocket
     }
 }
