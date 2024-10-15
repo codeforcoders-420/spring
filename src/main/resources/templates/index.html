@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MN End to End Workflow</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .progress-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(#4a90e2 0%, #4a90e2 var(--progress), #d9e2ef var(--progress), #d9e2ef 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #4a90e2;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -14,18 +28,15 @@
                 <span>Raja Murugan</span> <span>Role (Analyst)</span>
             </div>
         </header>
+        
         <div class="content">
             <div class="left-panel">
                 <button id="changeFileBtn" onclick="showPanel('changeFile')">Change File Generator</button>
                 <button id="peerReviewBtn" onclick="showPanel('peerReview')">Peer Review Validator</button>
                 <button id="impactReportBtn" onclick="showPanel('impactReport')">Impact Report Generator</button>
             </div>
-            <div class="right-panel">
-                <div id="changeFile" class="panel hidden">
-                    <h3>Change File Generator</h3>
-                    <!-- Additional content for Change File Generator can be added here -->
-                </div>
 
+            <div class="right-panel">
                 <div id="peerReview" class="panel hidden">
                     <h3>Select Env</h3>
                     <select>
@@ -34,14 +45,17 @@
                     </select>
 
                     <h3>Select Change File</h3>
-                    <input type="file" id="peerReviewFile" accept=".xls,.xlsx">
+                    <input type="file" id="fileInput" title="Browse for file" accept=".xls,.xlsx">
 
                     <button class="validate-btn" onclick="validatePeerReview()">Validate</button>
-                </div>
 
-                <div id="impactReport" class="panel hidden">
-                    <h3>Impact Report Generator</h3>
-                    <!-- Additional content for Impact Report Generator can be added here -->
+                    <!-- Progress Circle -->
+                    <div class="progress-circle" id="progressCircle" style="--progress: 0%;">
+                        0%
+                    </div>
+
+                    <!-- Log Messages -->
+                    <div id="logMessages" style="margin-top: 20px;"></div>
                 </div>
             </div>
         </div>
@@ -49,69 +63,61 @@
 
     <script>
         function showPanel(panelId) {
-            console.log("Panel clicked: " + panelId);
-            
-            // Hide all panels
             document.querySelectorAll('.panel').forEach(panel => {
                 panel.classList.add('hidden');
-                console.log(panel.id + " is now hidden");
             });
-
-            // Show the selected panel
-            const panelToShow = document.getElementById(panelId);
-            if (panelToShow) {
-                console.log("Showing panel: " + panelId);
-                panelToShow.classList.remove('hidden');
-
-                // Log computed style to check visibility
-                const style = window.getComputedStyle(panelToShow);
-                console.log("Computed style:", style.display);
-            } else {
-                console.error("No panel found with ID: " + panelId);
-            }
+            document.getElementById(panelId).classList.remove('hidden');
         }
 
         function validatePeerReview() {
-            const fileInput = document.getElementById("peerReviewFile");
+            const fileInput = document.getElementById('fileInput');
             const file = fileInput.files[0];
 
             if (!file) {
-                alert("Please select a file to validate.");
+                alert("Please select a file first.");
                 return;
             }
 
-            // Log the file name and type
-            console.log("Selected file: " + file.name);
-            console.log("File type: " + file.type);
-            console.log("File size: " + file.size + " bytes");
+            // Update progress in intervals (mocked as an example)
+            const progressCircle = document.getElementById('progressCircle');
+            let progress = 0;
 
+            const interval = setInterval(() => {
+                progress += 10;
+                if (progress > 100) {
+                    clearInterval(interval);
+                    progress = 100;
+                }
+                progressCircle.style.setProperty('--progress', `${progress}%`);
+                progressCircle.textContent = `${progress}%`;
+            }, 500);
+
+            // Create form data for the file
             const formData = new FormData();
-            formData.append("file", file);
+            formData.append('file', file);
 
-            console.log("FormData object created. Sending file via AJAX...");
-
-            // Send file using AJAX
+            // AJAX request to the backend
             const xhr = new XMLHttpRequest();
             xhr.open("POST", "/peer-review/validate", true);
 
             xhr.onload = function () {
                 if (xhr.status === 200) {
                     console.log("Response: " + xhr.responseText);
-                    alert("Validation successful: " + xhr.responseText);
+                    appendLog("Validation successful: " + xhr.responseText);
                 } else {
                     console.error("Error: " + xhr.responseText);
-                    alert("Validation failed: " + xhr.responseText);
+                    appendLog("Validation failed: " + xhr.responseText);
                 }
             };
 
-            // Handle any error
-            xhr.onerror = function () {
-                console.error("An error occurred during the file upload.");
-                alert("An error occurred during the validation process.");
-            };
-
-            // Send the file data
             xhr.send(formData);
+        }
+
+        function appendLog(message) {
+            const logMessages = document.getElementById("logMessages");
+            const logEntry = document.createElement("p");
+            logEntry.textContent = message;
+            logMessages.appendChild(logEntry);
         }
     </script>
 </body>

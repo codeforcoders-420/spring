@@ -1,22 +1,16 @@
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
 @RestController
 @RequestMapping("/peer-review")
 public class PeerReviewController {
 
     @PostMapping("/validate")
     public ResponseEntity<String> validateFile(@RequestParam("file") MultipartFile file) {
+        // Logs to store system output
+        StringBuilder logs = new StringBuilder();
+
         // Check if a file is selected
         if (file.isEmpty()) {
-            return new ResponseEntity<>("No file selected for validation.", HttpStatus.BAD_REQUEST);
+            logs.append("No file selected for validation.");
+            return new ResponseEntity<>(logs.toString(), HttpStatus.BAD_REQUEST);
         }
 
         try {
@@ -26,16 +20,23 @@ public class PeerReviewController {
                 fos.write(file.getBytes());
             }
 
+            // Log file save message
+            logs.append("File saved successfully at: ").append(tempFile.getAbsolutePath()).append("\n");
+
             // Call the Excel processing method (your existing Java code)
             String filePath = tempFile.getAbsolutePath();
-            // Assuming your logic from the provided code, call this method
+            logs.append("File path for validation: ").append(filePath).append("\n");
+
+            // Example: Assuming your logic from the provided code
             ReadDataFromExcel.UploadFileAndValidate(filePath);  // Modify this call as per your logic
 
             // Return a success response
-            return new ResponseEntity<>("File validation completed successfully.", HttpStatus.OK);
+            logs.append("File validation completed successfully.");
+            return new ResponseEntity<>(logs.toString(), HttpStatus.OK);
         } catch (IOException e) {
             e.printStackTrace();
-            return new ResponseEntity<>("File upload/validation failed: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            logs.append("File upload/validation failed: ").append(e.getMessage());
+            return new ResponseEntity<>(logs.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }
