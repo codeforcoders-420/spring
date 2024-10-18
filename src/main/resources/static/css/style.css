@@ -1,64 +1,244 @@
-/* Progress Circle Styles */
-.progress-circle-container {
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Body Styling */
+body {
+    background-color: #f5f5f7;
+    font-size: 16px;
+    color: #333;
+}
+
+/* Container for entire layout */
+.container {
     display: flex;
-    justify-content: center; /* Center the circle */
-    margin-top: 20px;
-}
-
-/* Align content pane to the top */
-.top-aligned {
-    margin-top: 0;
-    padding-top: 20px;
-    display: flex;
-    justify-content: flex-start; /* Aligns content at the top */
-    height: auto;
-}
-
-/* Progress Circle (same as previous code you provided) */
-@keyframes progress {
-    0% { --percentage: 0; }
-    100% { --percentage: var(--value); }
-}
-
-@property --percentage {
-    syntax: '<number>';
-    inherits: true;
-    initial-value: 0;
-}
-
-[role="progressbar"] {
-    --percentage: var(--value);
-    --primary: #369;
-    --secondary: #adf;
-    --size: 300px;
-    animation: progress 2s 0.5s forwards;
-    width: var(--size);
-    aspect-ratio: 1;
-    border-radius: 50%;
-    position: relative;
-    overflow: hidden;
-    display: grid;
-    place-items: center;
-}
-
-[role="progressbar"]::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
+    height: 100vh;
     width: 100%;
-    height: 100%;
-    background: conic-gradient(var(--primary) calc(var(--percentage) * 1%), var(--secondary) 0);
-    mask: radial-gradient(white 55%, transparent 0);
-    mask-mode: alpha;
 }
 
-[role="progressbar"]::after {
-    counter-reset: percentage var(--value);
-    content: counter(percentage) '%';
-    font-family: Helvetica, Arial, sans-serif;
-    font-size: calc(var(--size) / 5);
-    color: var(--primary);
+/* Sidebar for left pane */
+.sidebar {
+    width: 20%;
+    background-color: #ffffff; /* Changed to white */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
 }
 
-/* Other existing styles */
+.menu-button {
+  background-color: #007bff; /* Same blue as Validate button */
+  color: white;
+  font-size: 16px;
+  border: none;
+  padding: 8px 16px;
+  margin-bottom: 5px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 5px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; /* Same font as Validate button */
+  transition: background-color 0.3s ease;
+}
+
+.menu-button:hover {
+  background-color: #0056b3; /* Hover effect similar to Validate button */
+}
+
+.content {
+    width: 80%;
+    padding: 40px;
+    background-color: #ffffff;
+    border-left: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+
+/* Section container to manage content visibility */
+.section {
+    display: none;
+    width: 100%;
+}
+
+/* New: Split Right Pane into 2 Sections */
+.right-pane {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 30px;
+}
+
+.right-section {
+    width: 48%; /* Half the width for each section */
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Utility Form Styling */
+form {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+select, input[type="file"], button {
+    padding: 12px;
+    font-size: 16px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    width: 100%; /* Full width in the form */
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Progress Circle and Message Pane */
+.progress-circle {
+    display: inline-block;
+    margin-top: 30px;
+    width: 120px;
+    height: 120px;
+    position: relative;
+}
+
+.circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background-color: #d3d3d3;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.percentage {
+    font-size: 24px;
+    font-weight: bold;
+    color: #007bff; /* Using the blue color inspired by Proto 1 */
+}
+
+.message-pane {
+    display: inline-block;
+    margin-left: 40px;
+    padding: 20px;
+    background-color: #f0f0f0;
+    border-radius: 10px;
+    width: 60%;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.message-pane p {
+    font-size: 18px;
+    color: #333;
+}
+
+/* Typography and Heading Styling */
+h2 {
+    font-size: 28px;
+    font-weight: bold;
+    color: #1f1f1f;
+    margin-bottom: 20px;
+}
+
+h3 {
+    font-size: 22px;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+p {
+    font-size: 18px;
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+/* Header section */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #fff;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-bottom: 2px solid #ddd; /* Line beneath the header */
+}
+
+.header-left h1 {
+  margin: 0;
+  font-size: 24px;
+  color: #007bff;
+}
+
+.header-right {
+  text-align: right;
+}
+
+.user-name {
+  font-weight: bold;
+  font-size: 16px;
+  color: #333;
+}
+
+.user-role {
+  font-size: 14px;
+  color: #666;
+}
+
+/* Content pane line beneath options */
+.content-pane {
+  border-top: 2px solid #ddd; /* Line beneath the content pane */
+  padding-top: 20px;
+}
+
+/* Responsive Design for smaller screens */
+@media screen and (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+    }
+
+    .content {
+        width: 100%;
+    }
+
+    .right-pane {
+        flex-direction: column;
+    }
+
+    .right-section {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    select, input[type="file"], button {
+        width: 100%;
+    }
+
+    .progress-circle, .message-pane {
+        width: 100%;
+        margin-left: 0;
+    }
+}
